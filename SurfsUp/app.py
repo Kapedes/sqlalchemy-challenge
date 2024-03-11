@@ -49,9 +49,9 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/start_date<br/>"
+        f"/api/v1.0/start_date<br/>"       
         f"/api/v1.0/start_date/end_date"
-    )
+        f"<p>'start' and 'end' date should be in the format YYYYMMDD.</p>")    
 
 @app.route("/api/v1.0/precipitation")
 def preciptitation():
@@ -99,15 +99,17 @@ def tobs():
 
 
 @app.route("/api/v1.0/<start>")
-def temperature_start(start):
-    one_year_ago = dt.date(2017, 8, 23) - dt.timedelta(days=365)
+def temperature_start(start= None):
+
+    start_date = dt.datetime.strptime(start, "%Y%m%d")
+   
     
     results = session.query(func.avg(Measurement.tobs), func.min(Measurement.tobs), func.max(Measurement.tobs)).\
-        filter(Measurement.date >= one_year_ago).all()
+        filter(Measurement.date >= start_date).all()
 
     temp_data = {
-        "TMIN": results[0][1],
         "TAVG": results[0][0],
+        "TMIN": results[0][1],
         "TMAX": results[0][2]
         }
     
@@ -115,15 +117,19 @@ def temperature_start(start):
 
 
 @app.route("/api/v1.0/<start>/<end>")
-def temperature_range(start_date, end_date):  
+def temperature_range(start= None, end= None):  
+
+    start_date = dt.datetime.strptime(start, "%Y%m%d")
+    end_date = dt.datetime.strptime(end, "%Y%m%d")
 
     results = session.query(func.avg(Measurement.tobs), func.min(Measurement.tobs), func.max(Measurement.tobs)).\
-        filter((Measurement.date >= start_date)&(Measurement.date <= end_date)).\
-        all()
+        filter(Measurement.date >= start_date).\
+        filter(Measurement.date <= end_date).all()
+
 
     temp_data = {
-        "TMIN": results[0][1],
         "TAVG": results[0][0],
+        "TMIN": results[0][1],
         "TMAX": results[0][2]
         }
 
